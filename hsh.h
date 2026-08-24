@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <errno.h>
+#include <string.h>
 
 #define PROMPT "($) "
 #define MAX_ARGS 128
