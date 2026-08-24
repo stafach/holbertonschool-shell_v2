@@ -85,7 +85,7 @@ int apply_redirections(redirect_t *redirs);
 int apply_heredoc(char *delimiter);
 
 /* path.c */
-char *find_command(const char *cmd, char **envp);
+char *find_command(char *cmd, char **envp);
 
 /* execute.c */
 int execute_command(shell_t *sh, char **argv, redirect_t *redirs);
