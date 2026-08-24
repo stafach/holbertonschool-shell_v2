@@ -14,6 +14,7 @@
 #define PROMPT "($) "
 #define MAX_ARGS 128
 #define MAX_REDIRS 16
+#define READ_BUF 1024
 
 extern char **environ;
 
@@ -92,13 +93,16 @@ int execute_command(shell_t *sh, char **argv, redirect_t *redirs);
 
 /* builtins.c */
 int is_builtin(const char *cmd);
-int run_builtin(shell_t *sh, char **argv);
+int run_builtin(shell_t *sh, char **argv, int *should_exit);
+int builtin_env(shell_t *sh, char **argv);
+int builtin_cd(shell_t *sh, char **argv);
+int builtin_exit(shell_t *sh, char **argv, int *should_exit);
 
 /* cd.c */
-int builtin_cd(shell_t *sh, char **argv);
+int sh_is_number(const char *s);
+int sh_atoi_status(const char *s, int *value);
+int update_cd_env(shell_t *sh, char *old, int print_dir);
 
-/* exit.c */
-int builtin_exit(shell_t *sh, char **argv);
 
 /* signals.c */
 void sigint_handler(int sig);
