@@ -1,8 +1,8 @@
 #include "hsh.h"
 
 /**
- * sigint_handler - handles Ctrl-C.
- * @sig: signal number.
+ * sigint_handler - Handles Ctrl-C.
+ * @sig: Signal number.
  */
 void sigint_handler(int sig)
 {
@@ -11,7 +11,7 @@ void sigint_handler(int sig)
 }
 
 /**
- * install_signals - installs the interactive SIGINT handler.
+ * install_signals - Installs the interactive SIGINT handler.
  */
 void install_signals(void)
 {
@@ -19,41 +19,58 @@ void install_signals(void)
 }
 
 /**
- * main - entry point for the shell.
- * @argc: argument count.
- * @argv: argument vector.
- * Return: shell exit status.
+ * main - Entry point of the shell.
+ * @argc: Number of arguments.
+ * @argv: Program arguments.
+ *
+ * Return: Last command exit status.
  */
 int main(int argc, char **argv)
 {
 	shell_t sh;
 	char *line = NULL;
-	size_t n = 0;
+	size_t size = 0;
 	char *args[MAX_ARGS];
-	int status = 0;
-	int should_exit = 0;
+	redirect_t redirs[MAX_REDIRS];
+	int argc_cmd;
+	int status;
 
 	(void)argc;
+
 	sh.name = argv[0];
 	sh.env = env_copy(environ);
 	sh.last_status = 0;
 	sh.line_no = 0;
-	if (sh.env == NULL)
-		return (1);
+	sh.should_exit = 0;
+
 	install_signals();
-	while (!should_exit)
+
+	while (!sh.should_exit)
 	{
-		status = read_line(&line, &n);
+		init_redirections(redirs);
+
+		status = read_line(&line, &size);
 		if (status == -1)
 			break;
+
 		sh.line_no++;
-		if (parse_line(line, args) == 0)
+		argc_cmd = parse_line(line, args, redirs);
+
+		if (argc_cmd == -1)
+		{
+			sh.last_status = 2;
 			continue;
-		status = run_builtin(&sh, args, &should_exit);
-		if (status == -1)
-			status = execute_command(&sh, args);
-		sh.last_status = status;
+		}
+
+		if (argc_cmd == 0)
+			continue;
+
+		if (is_builtin(args[0]))
+			sh.last_status = run_builtin(&sh, args);
+		else
+			sh.last_status = execute_command(&sh, args, redirs);
 	}
+
 	free(line);
 	env_free(sh.env);
 	return (sh.last_status);
