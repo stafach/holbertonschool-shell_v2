@@ -103,4 +103,10 @@ int builtin_exit(shell_t *sh, char **argv);
 void sigint_handler(int sig);
 void install_signals(void);
 
+/* strings.c */
+size_t sh_strlen(const char *s);
+int sh_strcmp(const char *s1, const char *s2);
+int sh_starts(const char *str, const char *prefix);
+char *sh_strdup(const char *s);
+char *sh_join3(const char *a, const char *b, const char *c);
 #endif
