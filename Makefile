@@ -3,7 +3,7 @@ NAME = hsh
 CC = gcc
 CFLAGS = -Wall -Werror -Wextra -pedantic
 
-SRC = main.c input.c env.c env2.c strings.c parse.c path.c execute.c builtins.c cd.c
+SRC = main.c input.c env.c env2.c strings.c parse.c path.c execute.c builtins.c cd.c redirect.c
 
 OBJ = $(SRC:.c=.o)
 
