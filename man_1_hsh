@@ -1,0 +1,65 @@
+.TH HSH 1 "August 2026" "hsh 1.0" "User Commands"
+.SH NAME
+hsh \- simple UNIX command line interpreter
+.SH SYNOPSIS
+.B ./hsh
+.SH DESCRIPTION
+.B hsh
+is a small UNIX command line interpreter inspired by
+.BR sh (1).
+It reads commands from standard input, parses their arguments, searches the
+PATH for executable programs, creates child processes, and executes external
+commands.
+.SH PROMPT
+In interactive mode,
+.B hsh
+displays
+.B ($)
+before reading each command.
+The prompt is not displayed when standard input is not a terminal.
+.SH COMMAND SEARCH
+For a command without a slash,
+.B hsh
+searches each directory listed in the
+.B PATH
+environment variable.
+If a command contains a slash, it is executed directly.
+.SH BUILTINS
+.SS exit
+.B exit
+terminates the shell.
+A numeric argument is used as the exit status.
+.SS cd
+.B cd [path]
+changes the current working directory.
+Without an argument,
+.B cd
+uses
+.BR HOME .
+The command
+.B cd -
+changes to the previous working directory.
+After a successful directory change,
+.B PWD
+and
+.B OLDPWD
+are updated for commands executed by the shell.
+.SS env
+.B env
+prints the current environment.
+.SH EOF
+The shell exits when it receives end-of-file on standard input.
+In an interactive terminal this is normally produced by
+.B Ctrl-D
+on an empty input line.
+.SH SIGNALS
+SIGINT is handled so that an interactive Ctrl-C does not terminate the shell.
+.SH LIMITATIONS
+The shell does not implement pipes, redirections, quoting, command
+substitution, wildcard expansion, or logical operators.
+.SH EXIT STATUS
+An external command normally returns its exit status.
+A command that cannot be found returns 127.
+A command that cannot be executed because of permissions returns 126.
+.SH AUTHOR
+Written for the Holberton School system and blockchain specialization.
