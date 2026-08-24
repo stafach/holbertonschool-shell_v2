@@ -73,7 +73,7 @@ char *env_get(char **envp, const char *name);
 int env_set(char ***envp, const char *name, const char *value);
 
 /* input.c */
-int read_line(char **line, size_t *size);
+ssize_t read_line(char **line, size_t *n);
 
 /* parse.c */
 int parse_line(char *line, char **argv, redirect_t *redirs);
