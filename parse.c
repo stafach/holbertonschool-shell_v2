@@ -1,6 +1,21 @@
 #include "hsh.h"
 
 /**
+ * init_redirections - Initializes the redirection array.
+ * @redirs: Redirection array.
+ */
+void init_redirections(redirect_t *redirs)
+{
+	int i;
+
+	for (i = 0; i < MAX_REDIRS; i++)
+	{
+		redirs[i].type = REDIR_NONE;
+		redirs[i].target = NULL;
+	}
+}
+
+/**
  * get_redirect_type - Gets the type of a redirection token.
  * @token: Token to check.
  *

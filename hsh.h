@@ -77,6 +77,7 @@ int read_line(char **line, size_t *size);
 
 /* parse.c */
 int parse_line(char *line, char **argv, redirect_t *redirs);
+void init_redirections(redirect_t *redirs);
 
 /* redirect.c */
 int apply_redirections(redirect_t *redirs);
