@@ -16,6 +16,13 @@
 
 extern char **environ;
 
+/**
+ * struct shell_s - Stores the shell execution context.
+ * @env: Copy of the current environment variables.
+ * @name: Name of the shell executable (argv[0]).
+ * @last_status: Exit status of the last executed command.
+ * @line_no: Current command line number.
+ */
 typedef struct shell_s
 {
 	char **env;
