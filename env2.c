@@ -1,4 +1,4 @@
-#include "hsh.c"
+#include "hsh.h"
 
 
 /**
