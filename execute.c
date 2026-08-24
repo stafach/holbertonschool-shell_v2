@@ -1,36 +1,45 @@
 #include "hsh.h"
 
 /**
- * print_not_found - prints a command-not-found error.
- * @sh: shell state.
- * @cmd: command.
+ * print_not_found - Prints a command-not-found error.
+ * @sh: Shell context.
+ * @cmd: Command that was not found.
  */
-void print_not_found(shell_t *sh, char *cmd)
+static void print_not_found(shell_t *sh, const char *cmd)
 {
-	fprintf(stderr, "%s: %lu: %s: not found\n", sh->name,
-		sh->line_no, cmd);
+	fprintf(stderr, "%s: %lu: %s: not found\n",
+		sh->name, sh->line_no, cmd);
 }
 
 /**
- * print_exec_error - prints an execution error.
- * @sh: shell state.
- * @cmd: command.
- * @code: exit code.
+ * child_process - Executes a command in the child process.
+ * @sh: Shell context.
+ * @argv: Command arguments.
+ * @path: Executable path.
+ * @redirs: Command redirections.
  */
-void print_exec_error(shell_t *sh, char *cmd, int code)
+static void child_process(shell_t *sh, char **argv, char *path,
+			  redirect_t *redirs)
 {
-	fprintf(stderr, "%s: %lu: %s: %s\n", sh->name, sh->line_no,
-		cmd, code == 126 ? "Permission denied" : "not found");
+	if (apply_redirections(redirs) == -1)
+		_exit(1);
+
+	execve(path, argv, sh->env);
+	perror(sh->name);
+	_exit(126);
 }
 
 /**
- * execute_external - forks and executes a command.
- * @sh: shell state.
- * @argv: arguments.
- * @path: executable path.
- * Return: child status.
+ * execute_external - Forks and executes an external command.
+ * @sh: Shell context.
+ * @argv: Command arguments.
+ * @path: Executable path.
+ * @redirs: Command redirections.
+ *
+ * Return: Command exit status.
  */
-int execute_external(shell_t *sh, char **argv, char *path)
+static int execute_external(shell_t *sh, char **argv, char *path,
+			     redirect_t *redirs)
 {
 	pid_t pid;
 	int status;
@@ -41,29 +50,31 @@ int execute_external(shell_t *sh, char **argv, char *path)
 		perror(sh->name);
 		return (1);
 	}
+
 	if (pid == 0)
-	{
-		execve(path, argv, sh->env);
-		if (errno == EACCES)
-			_exit(126);
-		_exit(127);
-	}
+		child_process(sh, argv, path, redirs);
+
 	if (waitpid(pid, &status, 0) == -1)
 		return (1);
+
 	if (WIFEXITED(status))
 		return (WEXITSTATUS(status));
+
 	if (WIFSIGNALED(status))
 		return (128 + WTERMSIG(status));
+
 	return (1);
 }
 
 /**
- * execute_command - resolves and executes a command.
- * @sh: shell state.
- * @argv: arguments.
- * Return: command status.
+ * execute_command - Finds and executes an external command.
+ * @sh: Shell context.
+ * @argv: Command arguments.
+ * @redirs: Command redirections.
+ *
+ * Return: Command exit status.
  */
-int execute_command(shell_t *sh, char **argv)
+int execute_command(shell_t *sh, char **argv, redirect_t *redirs)
 {
 	char *path;
 	int status;
@@ -74,9 +85,9 @@ int execute_command(shell_t *sh, char **argv)
 		print_not_found(sh, argv[0]);
 		return (127);
 	}
-	status = execute_external(sh, argv, path);
+
+	status = execute_external(sh, argv, path, redirs);
 	free(path);
-	if (status == 126)
-		print_exec_error(sh, argv[0], status);
+
 	return (status);
 }
