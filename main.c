@@ -28,7 +28,7 @@ void install_signals(void)
 int main(int argc, char **argv)
 {
 	shell_t sh;
-	char *line = NULL;
+	char *expanded, *line = NULL;
 	size_t size = 0;
 	char *args[MAX_ARGS];
 	redirect_t redirs[MAX_REDIRS];
@@ -54,7 +54,14 @@ int main(int argc, char **argv)
 			break;
 
 		sh.line_no++;
-		argc_cmd = parse_line(line, args, redirs);
+		expanded = expand_redirs(line);
+		if (expanded == NULL)
+		{
+			sh.last_status = 1;
+			continue;
+		}
+		argc_cmd = parse_line(expanded, args, redirs);
+		free(expanded);
 
 		if (argc_cmd == -1)
 		{
