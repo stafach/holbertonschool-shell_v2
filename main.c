@@ -71,9 +71,9 @@ int main(int argc, char **argv)
 			else
 				sh.last_status = execute_command(&sh, args, redirs);
 		}
+		free(expanded);
 	}
 
-	free(expanded);
 	free(line);
 	env_free(sh.env);
 	return (sh.last_status);
