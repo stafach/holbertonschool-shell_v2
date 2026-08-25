@@ -76,6 +76,7 @@ int env_set(char ***envp, const char *name, const char *value);
 
 /* input.c */
 ssize_t read_line(char **line, size_t *n);
+char *expand_redirs(const char *line);
 
 /* parse.c */
 int parse_line(char *line, char **argv, redirect_t *redirs);
@@ -104,7 +105,7 @@ int sh_atoi_status(const char *s, int *value);
 int update_cd_env(shell_t *sh, char *old, int print_dir);
 
 
-/* signals.c */
+/* main.c */
 void sigint_handler(int sig);
 void install_signals(void);
 
