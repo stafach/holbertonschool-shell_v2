@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 			if (is_builtin(args[0]))
 				sh.last_status = run_builtin(&sh, args, &sh.should_exit);
 			else
-				sh.last_status = execute_command(&sh, args, redirs);
+				sh.last_status = execute_command(&sh, args, redirs, expanded);
 		}
 		free(expanded);
 	}
