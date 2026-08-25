@@ -63,19 +63,16 @@ int main(int argc, char **argv)
 		argc_cmd = parse_line(expanded, args, redirs);
 
 		if (argc_cmd == -1)
-		{
 			sh.last_status = 2;
-			continue;
+		else if (argc_cmd > 0)
+		{
+			if (is_builtin(args[0]))
+				sh.last_status = run_builtin(&sh, args, &sh.should_exit);
+			else
+				sh.last_status = execute_command(&sh, args, redirs);
 		}
-
-		if (argc_cmd == 0)
-			continue;
-
-		if (is_builtin(args[0]))
-			sh.last_status = run_builtin(&sh, args, &sh.should_exit);
-		else
-			sh.last_status = execute_command(&sh, args, redirs);
 	}
+
 	free(expanded);
 	free(line);
 	env_free(sh.env);
