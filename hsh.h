@@ -90,7 +90,6 @@ int apply_heredoc(char *delimiter);
 char *find_command(char *cmd, char **envp);
 
 /* execute.c */
-static void print_not_found(shell_t *sh, const char *cmd);
 int execute_command(shell_t *sh, char **argv, redirect_t *redirs);
 
 /* builtins.c */
