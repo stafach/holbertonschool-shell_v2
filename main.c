@@ -55,6 +55,9 @@ int main(int argc, char **argv)
 
 		sh.line_no++;
 		expanded = expand_redirs(line);
+		free(line);
+		line = NULL;
+		size = 0;
 		if (expanded == NULL)
 		{
 			sh.last_status = 1;
