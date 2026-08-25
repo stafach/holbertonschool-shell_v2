@@ -26,18 +26,23 @@ static void child_process(shell_t *sh, char **argv, redirect_t *redirs)
 	char *path;
 
 	if (apply_redirections(redirs) == -1)
+	{
+		env_free(sh->env);
 		_exit(1);
+	}
 
 	path = find_command(argv[0], sh->env);
 	if (path == NULL)
 	{
 		print_not_found(sh, argv[0]);
+		env_free(sh->env);
 		_exit(127);
 	}
 
 	execve(path, argv, sh->env);
 	perror(sh->name);
 	free(path);
+	env_free(sh->env);
 	_exit(126);
 }
 
