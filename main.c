@@ -61,7 +61,6 @@ int main(int argc, char **argv)
 			continue;
 		}
 		argc_cmd = parse_line(expanded, args, redirs);
-		free(expanded);
 
 		if (argc_cmd == -1)
 		{
@@ -77,7 +76,7 @@ int main(int argc, char **argv)
 		else
 			sh.last_status = execute_command(&sh, args, redirs);
 	}
-
+	free(expanded);
 	free(line);
 	env_free(sh.env);
 	return (sh.last_status);
