@@ -85,7 +85,7 @@ int parse_line(char *line, char **argv, redirect_t *redirs);
 void init_redirections(redirect_t *redirs);
 
 /* redirect.c */
-int apply_redirections(redirect_t *redirs);
+int apply_redirections(shell_t *sh, redirect_t *redirs);
 int apply_heredoc(char *delimiter);
 
 /* path.c */
