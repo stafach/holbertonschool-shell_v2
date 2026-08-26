@@ -2,11 +2,12 @@
 
 /**
  * redirect_output - Redirects stdout to a file.
+ * @sh: Shell context, for the error message.
  * @redirect: Output redirection.
  *
  * Return: 0 on success, -1 on failure.
  */
-static int redirect_output(redirect_t *redirect)
+static int redirect_output(shell_t *sh, redirect_t *redirect)
 {
 	int fd;
 	int flags;
@@ -18,13 +19,15 @@ static int redirect_output(redirect_t *redirect)
 	fd = open(redirect->target, flags, 0644);
 	if (fd == -1)
 	{
-		perror("hsh");
+		fprintf(stderr, "%s: %lu: cannot open %s: ",
+			sh->name, sh->line_no, redirect->target);
+		perror(NULL);
 		return (-1);
 	}
 
 	if (dup2(fd, STDOUT_FILENO) == -1)
 	{
-		perror("hsh");
+		perror(sh->name);
 		close(fd);
 		return (-1);
 	}
@@ -35,24 +38,27 @@ static int redirect_output(redirect_t *redirect)
 
 /**
  * redirect_input - Redirects stdin from a file.
+ * @sh: Shell context, for the error message.
  * @redirect: Input redirection.
  *
  * Return: 0 on success, -1 on failure.
  */
-static int redirect_input(redirect_t *redirect)
+static int redirect_input(shell_t *sh, redirect_t *redirect)
 {
 	int fd;
 
 	fd = open(redirect->target, O_RDONLY);
 	if (fd == -1)
 	{
-		perror("hsh");
+		fprintf(stderr, "%s: %lu: cannot open %s: ",
+			sh->name, sh->line_no, redirect->target);
+		perror(NULL);
 		return (-1);
 	}
 
 	if (dup2(fd, STDIN_FILENO) == -1)
 	{
-		perror("hsh");
+		perror(sh->name);
 		close(fd);
 		return (-1);
 	}
@@ -62,10 +68,16 @@ static int redirect_input(redirect_t *redirect)
 }
 
 /**
- * apply_heredoc - Reads input until the delimiter is reached.
+ * apply_heredoc - Reads lines from stdin until the delimiter, storing
+ * them in a fresh pipe.
  * @delimiter: Here-document delimiter.
  *
- * Return: 0 on success, -1 on failure.
+ * Description: Must be called in the shell's own process, before any
+ * fork(), so the single buffered stdin stream is only ever consumed
+ * once. A forked child later just dup2()s the returned read end onto
+ * its stdin; it must never read the heredoc lines itself.
+ *
+ * Return: the pipe's read-end file descriptor on success, -1 on failure.
  */
 int apply_heredoc(char *delimiter)
 {
@@ -95,45 +107,48 @@ int apply_heredoc(char *delimiter)
 
 	free(line);
 	close(pipefd[1]);
-
-	if (dup2(pipefd[0], STDIN_FILENO) == -1)
-	{
-		close(pipefd[0]);
-		return (-1);
-	}
-
-	close(pipefd[0]);
-	return (0);
+	return (pipefd[0]);
 }
 
 /**
  * apply_one_redirect - Applies one redirection.
+ * @sh: Shell context, for error messages.
  * @redirect: Redirection to apply.
+ *
+ * Description: A heredoc's content was already read into redirect->fd
+ * by prepare_heredocs(), before the fork that leads here — this just
+ * plugs that already-filled pipe onto stdin.
  *
  * Return: 0 on success, -1 on failure.
  */
-static int apply_one_redirect(redirect_t *redirect)
+static int apply_one_redirect(shell_t *sh, redirect_t *redirect)
 {
 	if (redirect->type == REDIR_OUT ||
 	    redirect->type == REDIR_APPEND)
-		return (redirect_output(redirect));
+		return (redirect_output(sh, redirect));
 
 	if (redirect->type == REDIR_IN)
-		return (redirect_input(redirect));
+		return (redirect_input(sh, redirect));
 
 	if (redirect->type == REDIR_HEREDOC)
-		return (apply_heredoc(redirect->target));
+	{
+		if (dup2(redirect->fd, STDIN_FILENO) == -1)
+			return (-1);
+		close(redirect->fd);
+		return (0);
+	}
 
 	return (0);
 }
 
 /**
  * apply_redirections - Applies all command redirections.
+ * @sh: Shell context, for error messages.
  * @redirs: Redirection array.
  *
  * Return: 0 on success, -1 on failure.
  */
-int apply_redirections(redirect_t *redirs)
+int apply_redirections(shell_t *sh, redirect_t *redirs)
 {
 	int i;
 
@@ -142,7 +157,7 @@ int apply_redirections(redirect_t *redirs)
 		if (redirs[i].type == REDIR_NONE)
 			break;
 
-		if (apply_one_redirect(&redirs[i]) == -1)
+		if (apply_one_redirect(sh, &redirs[i]) == -1)
 			return (-1);
 	}
 
