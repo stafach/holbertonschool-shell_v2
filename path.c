@@ -50,11 +50,7 @@ static char *build_candidate(char *dir, char *cmd)
  */
 char *find_command(char *cmd, char **envp)
 {
-	char *path;
-	char *copy;
-	char *dir;
-	char *end;
-	char *candidate;
+	char *path, *copy, *dir, *end, *candidate;
 	int has_next;
 
 	if (cmd == NULL || cmd[0] == '\0')
