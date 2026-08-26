@@ -12,6 +12,37 @@ static void print_not_found(shell_t *sh, const char *cmd)
 }
 
 /**
+ * prepare_heredocs - Reads every heredoc's content before forking.
+ * @redirs: Command redirections.
+ *
+ * Description: getline() buffers far more of stdin than the single
+ * line it hands back, and fork() would duplicate that buffer into
+ * the child independently. Reading heredocs after forking would let
+ * the parent's own untouched copy of those bytes get re-read (and
+ * re-executed as commands) once the child is done. Doing it here, in
+ * the shell's single process, before any fork(), keeps stdin's state
+ * owned by one reader only.
+ *
+ * Return: 0 on success, -1 on failure.
+ */
+static int prepare_heredocs(redirect_t *redirs)
+{
+	int i;
+
+	for (i = 0; i < MAX_REDIRS && redirs[i].type != REDIR_NONE; i++)
+	{
+		if (redirs[i].type != REDIR_HEREDOC)
+			continue;
+
+		redirs[i].fd = apply_heredoc(redirs[i].target);
+		if (redirs[i].fd == -1)
+			return (-1);
+	}
+
+	return (0);
+}
+
+/**
  * child_process - Applies redirections, resolves and runs the command.
  * @sh: Shell context.
  * @argv: Command arguments.
@@ -29,11 +60,11 @@ static void child_process(shell_t *sh, char **argv, redirect_t *redirs,
 {
 	char *path;
 
-	if (apply_redirections(redirs) == -1)
+	if (apply_redirections(sh, redirs) == -1)
 	{
 		env_free(sh->env);
 		free(expanded);
-		_exit(1);
+		_exit(2);
 	}
 
 	path = find_command(argv[0], sh->env);
@@ -68,6 +99,13 @@ int execute_command(shell_t *sh, char **argv, redirect_t *redirs,
 {
 	pid_t pid;
 	int status;
+	int i;
+
+	if (prepare_heredocs(redirs) == -1)
+	{
+		perror(sh->name);
+		return (1);
+	}
 
 	pid = fork();
 	if (pid == -1)
@@ -78,6 +116,10 @@ int execute_command(shell_t *sh, char **argv, redirect_t *redirs,
 
 	if (pid == 0)
 		child_process(sh, argv, redirs, expanded);
+
+	for (i = 0; i < MAX_REDIRS && redirs[i].type != REDIR_NONE; i++)
+		if (redirs[i].type == REDIR_HEREDOC && redirs[i].fd != -1)
+			close(redirs[i].fd);
 
 	if (waitpid(pid, &status, 0) == -1)
 		return (1);
