@@ -39,11 +39,13 @@ enum redirect_type
  * struct redirect_s - Stores command redirection information.
  * @type: Type of redirection.
  * @target: File or delimiter used by the redirection.
+ * @fd: For a heredoc, the pre-filled pipe read end (-1 otherwise).
  */
 typedef struct redirect_s
 {
 	enum redirect_type type;
 	char *target;
+	int fd;
 } redirect_t;
 
 /**
