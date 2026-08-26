@@ -12,6 +12,7 @@ void init_redirections(redirect_t *redirs)
 	{
 		redirs[i].type = REDIR_NONE;
 		redirs[i].target = NULL;
+		redirs[i].fd = -1;
 	}
 }
 
