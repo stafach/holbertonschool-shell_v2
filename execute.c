@@ -54,9 +54,11 @@ static int prepare_heredocs(redirect_t *redirs)
  * command itself does not exist (matching sh's behavior). Every exit
  * path frees the memory this process inherited from the parent at
  * fork() time, since it will never return to main()'s own cleanup.
+ * Shared with pipeline.c, which reuses this for every pipeline stage
+ * after wiring its own stdin/stdout onto the pipe.
  */
-static void child_process(shell_t *sh, char **argv, redirect_t *redirs,
-			   char *expanded)
+void child_process(shell_t *sh, char **argv, redirect_t *redirs,
+		    char *expanded)
 {
 	char *path;
 
