@@ -30,9 +30,6 @@ int main(int argc, char **argv)
 	shell_t sh;
 	char *expanded, *line = NULL;
 	size_t size = 0;
-	char *args[MAX_ARGS];
-	redirect_t redirs[MAX_REDIRS];
-	int argc_cmd;
 	int status;
 
 	(void)argc;
@@ -47,14 +44,12 @@ int main(int argc, char **argv)
 
 	while (!sh.should_exit)
 	{
-		init_redirections(redirs);
-
 		status = read_line(&line, &size);
 		if (status == -1)
 			break;
 
 		sh.line_no++;
-		expanded = expand_redirs(line);
+		expanded = expand_operators(line);
 		free(line);
 		line = NULL;
 		size = 0;
@@ -63,17 +58,7 @@ int main(int argc, char **argv)
 			sh.last_status = 1;
 			continue;
 		}
-		argc_cmd = parse_line(expanded, args, redirs);
-
-		if (argc_cmd == -1)
-			sh.last_status = 2;
-		else if (argc_cmd > 0)
-		{
-			if (is_builtin(args[0]))
-				sh.last_status = run_builtin(&sh, args, &sh.should_exit);
-			else
-				sh.last_status = execute_command(&sh, args, redirs, expanded);
-		}
+		sh.last_status = execute_list(&sh, expanded);
 		free(expanded);
 	}
 
