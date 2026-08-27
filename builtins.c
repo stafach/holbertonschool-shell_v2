@@ -9,7 +9,9 @@ int is_builtin(const char *cmd)
 {
 	return (sh_strcmp(cmd, "exit") == 0 ||
 		sh_strcmp(cmd, "cd") == 0 ||
-		sh_strcmp(cmd, "env") == 0);
+		sh_strcmp(cmd, "env") == 0 ||
+		sh_strcmp(cmd, "setenv") == 0 ||
+		sh_strcmp(cmd, "unsetenv") == 0);
 }
 
 /**
@@ -32,6 +34,10 @@ int run_builtin(shell_t *sh, char **argv, int *should_exit)
 	}
 	if (sh_strcmp(argv[0], "cd") == 0)
 		return (builtin_cd(sh, argv));
+	if (sh_strcmp(argv[0], "setenv") == 0)
+		return (builtin_setenv(sh, argv));
+	if (sh_strcmp(argv[0], "unsetenv") == 0)
+		return (builtin_unsetenv(sh, argv));
 	return (builtin_env(sh, argv));
 }
 
