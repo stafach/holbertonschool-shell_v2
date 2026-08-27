@@ -14,6 +14,8 @@
 #define PROMPT "($) "
 #define MAX_ARGS 128
 #define MAX_REDIRS 16
+#define MAX_SEGMENTS 16
+#define MAX_PIPES 16
 #define READ_BUF 1024
 
 extern char **environ;
@@ -33,6 +35,20 @@ enum redirect_type
 	REDIR_APPEND,
 	REDIR_IN,
 	REDIR_HEREDOC
+};
+
+/**
+ * enum list_op - How a segment is connected to the one before it.
+ * @LIST_SEMI: Always run, regardless of the previous status (";", or
+ * the very first segment).
+ * @LIST_AND: Run only if the previous segment succeeded ("&&").
+ * @LIST_OR: Run only if the previous segment failed ("||").
+ */
+enum list_op
+{
+	LIST_SEMI,
+	LIST_AND,
+	LIST_OR
 };
 
 /**
@@ -76,9 +92,12 @@ void env_free(char **envp);
 char *env_get(char **envp, const char *name);
 int env_set(char ***envp, const char *name, const char *value);
 
+/* env2.c */
+int env_unset(char ***envp, const char *name);
+
 /* input.c */
 ssize_t read_line(char **line, size_t *n);
-char *expand_redirs(const char *line);
+char *expand_operators(const char *line);
 
 /* parse.c */
 int parse_line(char *line, char **argv, redirect_t *redirs);
@@ -94,6 +113,14 @@ char *find_command(char *cmd, char **envp);
 /* execute.c */
 int execute_command(shell_t *sh, char **argv, redirect_t *redirs,
 		     char *expanded);
+void child_process(shell_t *sh, char **argv, redirect_t *redirs,
+		    char *expanded);
+
+/* list.c */
+int execute_list(shell_t *sh, char *expanded);
+
+/* pipeline.c */
+int execute_pipeline(shell_t *sh, char *segment, char *expanded);
 
 /* builtins.c */
 int is_builtin(const char *cmd);
@@ -101,6 +128,10 @@ int run_builtin(shell_t *sh, char **argv, int *should_exit);
 int builtin_env(shell_t *sh, char **argv);
 int builtin_cd(shell_t *sh, char **argv);
 int builtin_exit(shell_t *sh, char **argv, int *should_exit);
+
+/* env_builtins.c */
+int builtin_setenv(shell_t *sh, char **argv);
+int builtin_unsetenv(shell_t *sh, char **argv);
 
 /* cd.c */
 int sh_is_number(const char *s);
