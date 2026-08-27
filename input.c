@@ -27,13 +27,19 @@ ssize_t read_line(char **line, size_t *n)
 }
 
 /**
- * expand_redirs - inserts spaces around redirection operators so that
- * they are recognized even when glued to adjacent words (e.g. "ls>out").
+ * expand_operators - inserts spaces around redirection and list/pipe
+ * operators so that they are recognized even when glued to adjacent
+ * words (e.g. "ls>out", "true&&false", "a;b", "ls|wc").
  * @line: the raw line read from the user
+ *
+ * Description: '<', '>', ';', '&' and '|' all follow the same rule:
+ * a lone one becomes " X ", a doubled one ("<<", ">>", "&&", "||")
+ * becomes " XX ". ';' never doubles in practice, but treating it the
+ * same way is harmless.
  *
  * Return: a newly malloc'ed, expanded copy of line, or NULL on failure
  */
-char *expand_redirs(const char *line)
+char *expand_operators(const char *line)
 {
 	char *out;
 	size_t i = 0, j = 0, len = sh_strlen(line);
@@ -44,7 +50,8 @@ char *expand_redirs(const char *line)
 
 	while (line[i] != '\0')
 	{
-		if (line[i] == '<' || line[i] == '>')
+		if (line[i] == '<' || line[i] == '>' || line[i] == ';' ||
+		    line[i] == '&' || line[i] == '|')
 		{
 			out[j++] = ' ';
 			out[j++] = line[i++];
