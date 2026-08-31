@@ -1,4 +1,4 @@
-.TH HSH 1 "August 2026" "hsh 1.0" "User Commands"
+.TH HSH 1 "August 2026" "hsh 1.8" "User Commands"
 .SH NAME
 hsh \- simple UNIX command line interpreter
 .SH SYNOPSIS
@@ -7,9 +7,12 @@ hsh \- simple UNIX command line interpreter
 .B hsh
 is a small UNIX command line interpreter inspired by
 .BR sh (1).
-It reads commands from standard input, parses their arguments, searches the
-PATH for executable programs, creates child processes, and executes external
-commands.
+It reads commands from standard input, parses their arguments and
+redirections, searches the PATH for executable programs, creates child
+processes, and executes external commands.
+Beyond a single command,
+.B hsh
+understands command lists, pipelines, redirections, and here-documents.
 .SH PROMPT
 In interactive mode,
 .B hsh
@@ -24,6 +27,47 @@ searches each directory listed in the
 .B PATH
 environment variable.
 If a command contains a slash, it is executed directly.
+.SH COMMAND LISTS
+.TP
+.B ;
+Runs the next command unconditionally.
+.TP
+.B &&
+Runs the next command only if the previous command succeeded (exit status 0).
+.TP
+.B ||
+Runs the next command only if the previous command failed (a non-zero exit
+status).
+.SH PIPELINES
+A
+.B |
+between two commands connects the standard output of the command on the
+left to the standard input of the command on the right.
+Any number of commands may be chained this way; each command in the
+pipeline runs in its own process.
+The exit status of a pipeline is the exit status of its last command.
+.SH REDIRECTION
+.TP
+.BI > " file"
+Redirects standard output to
+.IR file ,
+creating it if needed and truncating it if it already exists.
+.TP
+.BI >> " file"
+Redirects standard output to
+.IR file ,
+appending to it if it already exists.
+.TP
+.BI < " file"
+Redirects standard input to read from
+.IR file .
+.TP
+.BI << " delimiter"
+Reads a here-document: lines are read from standard input until a line
+matching
+.I delimiter
+exactly is found, and the collected lines become the standard input of the
+command.
 .SH BUILTINS
 .SS exit
 .B exit
@@ -47,6 +91,16 @@ are updated for commands executed by the shell.
 .SS env
 .B env
 prints the current environment.
+.SS setenv
+.BI "setenv " VARIABLE " " VALUE
+creates
+.I VARIABLE
+in the environment, or overwrites its value if it already exists.
+.SS unsetenv
+.BI "unsetenv " VARIABLE
+removes
+.I VARIABLE
+from the environment.
 .SH EOF
 The shell exits when it receives end-of-file on standard input.
 In an interactive terminal this is normally produced by
@@ -55,11 +109,16 @@ on an empty input line.
 .SH SIGNALS
 SIGINT is handled so that an interactive Ctrl-C does not terminate the shell.
 .SH LIMITATIONS
-The shell does not implement pipes, redirections, quoting, command
-substitution, wildcard expansion, or logical operators.
+The shell does not implement quoting, command substitution, wildcard
+expansion, or variable expansion.
 .SH EXIT STATUS
 An external command normally returns its exit status.
 A command that cannot be found returns 127.
 A command that cannot be executed because of permissions returns 126.
+A command killed by a signal returns 128 plus the signal number.
+A redirection that cannot be opened returns 2, and reports the error in the
+same format as
+.BR sh (1).
+The exit status of a pipeline is the exit status of its last command.
 .SH AUTHOR
 Written for the Holberton School system and blockchain specialization.
